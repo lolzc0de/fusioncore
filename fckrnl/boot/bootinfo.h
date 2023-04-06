@@ -6,7 +6,7 @@
 
 typedef struct {
 	framebuffer_t *framebuffer;
-	void *mmap;
+	struct EFI_MEMORY_DESCRIPTOR *mmap;
 	uint64_t mmap_size;
 	uint64_t mmap_desc_size;
 } boot_info_t;
