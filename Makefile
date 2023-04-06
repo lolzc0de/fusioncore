@@ -1,7 +1,7 @@
 OSNAME = FusionCore
 
 GNUEFI = fcldr/uefi
-OVMF = /usr/share/OVMF/x64
+OVMF = /usr/share/OVMF/x64/OVMF.fd
 LDS = fckrnl/x86_64-kernel.ld
 CC = x86_64-elf-gcc
 LD = x86_64-elf-ld
@@ -12,7 +12,7 @@ LDFLAGS = -T $(LDS) -static -Bsymbolic -nostdlib
 SRCDIR := fckrnl
 OBJDIR := lib
 BUILDDIR := build
-BOOTEFI := $(GNUEFI)/x86_64/bootloader/main.efi
+BOOTEFI := $(GNUEFI)/x86_64/fcldr/main.efi
 KERNEL = $(BUILDDIR)/fckrnl
 
 rwildcard=$(foreach d,$(wildcard $(1:=/*)),$(call rwildcard,$d,$2) $(filter $(subst *,%,$2),$d))
@@ -48,4 +48,4 @@ img:
 
 .PHONY: run
 run:
-	qemu-system-x86_64 -drive format=raw,file=$(BUILDDIR)/$(OSNAME).img -m 256M -cpu qemu64 -drive -bios $(OVMF) -net none
+	qemu-system-x86_64 -drive format=raw,file=$(BUILDDIR)/$(OSNAME).img -m 256M -cpu qemu64 -bios $(OVMF) -net none
