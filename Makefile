@@ -1,3 +1,5 @@
+OSNAME = FusionCore
+
 GNUEFI = fcldr/uefi
 OVMF = /usr/share/OVMF/x64
 LDS = fckrnl/x86_64-kernel.ld
@@ -5,12 +7,12 @@ CC = x86_64-elf-gcc
 LD = x86_64-elf-ld
 
 CFLAGS = -ffreestanding -fshort-wchar
-LDFLAGS = -T $(LDS) -shared -Bsymbolic -nostdlib
+LDFLAGS = -T $(LDS) -static -Bsymbolic -nostdlib
 
 SRCDIR := fckrnl
 OBJDIR := lib
 BUILDDIR := build
-BOOTEFI := $(GNUEFI)/x86_64/bootloader/BOOTX64.EFI
+BOOTEFI := $(GNUEFI)/x86_64/bootloader/main.efi
 KERNEL = $(BUILDDIR)/fckrnl
 
 rwildcard=$(foreach d,$(wildcard $(1:=/*)),$(call rwildcard,$d,$2) $(filter $(subst *,%,$2),$d))
@@ -37,10 +39,10 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.c
 .PHONY: img
 img:
 	dd if=/dev/zero of=$(BUILDDIR)/$(OSNAME).img bs=512 count=93750
-	mformat -i $(BUILDDIR)/$(OSNAME).img -f 1440 ::
+	mformat -i $(BUILDDIR)/$(OSNAME).img ::
 	mmd -i $(BUILDDIR)/$(OSNAME).img ::/EFI
 	mmd -i $(BUILDDIR)/$(OSNAME).img ::/EFI/BOOT
-	mcopy -i $(BUILDDIR)/$(OSNAME).img $(KERNEL) ::/EFI/BOOT
+	mcopy -i $(BUILDDIR)/$(OSNAME).img $(KERNEL) ::
 	mcopy -i $(BUILDDIR)/$(OSNAME).img $(BOOTEFI) ::/EFI/BOOT/BOOTX64.EFI
 	mcopy -i $(BUILDDIR)/$(OSNAME).img startup.nsh ::
 
