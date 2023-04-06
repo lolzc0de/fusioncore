@@ -6,7 +6,7 @@ LDS = fckrnl/x86_64-kernel.ld
 CC = x86_64-elf-gcc
 LD = x86_64-elf-ld
 
-CFLAGS = -ffreestanding -fshort-wchar
+CFLAGS = -ffreestanding -fshort-wchar -Ifckrnl
 LDFLAGS = -T $(LDS) -static -Bsymbolic -nostdlib
 
 SRCDIR := fckrnl
@@ -30,7 +30,7 @@ bootloader:
 kernel: $(KERNEL)
 
 $(KERNEL): $(OBJS)
-	$(LD) $(LDFLAGS) -o $@ $<
+	$(LD) $(LDFLAGS) -o $@ $^
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.c
 	@mkdir -p $(@D)

@@ -2,7 +2,30 @@
 #include <efilib.h>
 #include <elf.h>
 
-typedef unsigned long long size_t;
+#include "bootinfo.h"
+
+framebuffer_t Framebuffer;
+
+framebuffer_t *InitGOP()
+{
+	EFI_GUID gopGuid = EFI_GRAPHICS_OUTPUT_PROTOCOL_GUID;
+	EFI_GRAPHICS_OUTPUT_PROTOCOL *GOP;
+	EFI_STATUS Status;
+
+	Status = uefi_call_wrapper(BS->LocateProtocol, 3, &gopGuid, NULL, (void**)&GOP);
+	if (EFI_ERROR(Status)) {
+		Print(L"ERROR: Unable to locate GOP!\r\n");
+		return NULL;
+	}
+
+	Framebuffer.BaseAddr = (void*)GOP->Mode->FrameBufferBase;
+	Framebuffer.BufSize = GOP->Mode->FrameBufferSize;
+	Framebuffer.Width = GOP->Mode->Info->HorizontalResolution;
+	Framebuffer.Height = GOP->Mode->Info->VerticalResolution;
+	Framebuffer.PixelsPerScanLine = GOP->Mode->Info->PixelsPerScanLine;
+
+	return &Framebuffer;
+}
 
 EFI_FILE *LoadFile(EFI_FILE *Directory, CHAR16 *Path, EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable)
 {
@@ -44,7 +67,7 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable)
 	if (Kernel == NULL) {
 		Print(L"Could not load kernel\r\n");
 	}
-	
+
 	Elf64_Ehdr Header;
 	{
 		UINTN FileInfoSize;
@@ -89,8 +112,28 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable)
 		}
 	}
 
-	// actually call the kernel
-	int (*kmain)() = ((__attribute__((sysv_abi)) int(*)())Header.e_entry);
+	framebuffer_t *Fbuf = InitGOP();
+
+	EFI_MEMORY_DESCRIPTOR *Map = NULL;
+	UINTN MapSize, MapKey;
+	UINTN DescriptorSize;
+	UINT32 DescriptorVersion;
+	{
+		SystemTable->BootServices->GetMemoryMap(&MapSize, Map, &MapKey, &DescriptorSize, &DescriptorVersion);
+		SystemTable->BootServices->AllocatePool(EfiLoaderData, MapSize, (void **)&Map);
+		SystemTable->BootServices->GetMemoryMap(&MapSize, Map, &MapKey, &DescriptorSize, &DescriptorVersion);
+	}
+
+	boot_info_t BootInfo;
+	BootInfo.framebuffer = Fbuf;
+	BootInfo.mmap = Map;
+	BootInfo.mmap_size = MapSize;
+	BootInfo.mmap_desc_size = DescriptorSize;
+
+	SystemTable->BootServices->ExitBootServices(ImageHandle, MapKey);
+
+	void (*kmain)(boot_info_t *) = ((__attribute__((sysv_abi)) void(*)(boot_info_t *))Header.e_entry);
+	kmain(&BootInfo);
 
 	return EFI_SUCCESS;
 }
