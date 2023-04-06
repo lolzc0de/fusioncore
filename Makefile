@@ -43,6 +43,7 @@ img:
 	mmd -i $(BUILDDIR)/$(OSNAME).img ::/EFI
 	mmd -i $(BUILDDIR)/$(OSNAME).img ::/EFI/BOOT
 	mcopy -i $(BUILDDIR)/$(OSNAME).img $(KERNEL) ::
+	mcopy -i $(BUILDDIR)/$(OSNAME).img zap-light16.psf ::
 	mcopy -i $(BUILDDIR)/$(OSNAME).img $(BOOTEFI) ::/EFI/BOOT/BOOTX64.EFI
 	mcopy -i $(BUILDDIR)/$(OSNAME).img startup.nsh ::
 

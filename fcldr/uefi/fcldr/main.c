@@ -2,6 +2,7 @@
 #include <efilib.h>
 #include <elf.h>
 
+#include "font.h"
 #include "bootinfo.h"
 
 framebuffer_t Framebuffer;
@@ -45,6 +46,43 @@ EFI_FILE *LoadFile(EFI_FILE *Directory, CHAR16 *Path, EFI_HANDLE ImageHandle, EF
 	}
 
 	return File;
+}
+
+PSF1_FONT *LoadPSF1Font(EFI_FILE *Directory, CHAR16 *Path, EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable)
+{
+	EFI_FILE *Font = LoadFile(Directory, Path, ImageHandle, SystemTable);
+	if (Font == NULL) return NULL;
+
+	PSF1_HEADER *FontHeader;
+	SystemTable->BootServices->AllocatePool(EfiLoaderData, sizeof(PSF1_HEADER), (void**)&FontHeader);
+	UINTN Size = sizeof(PSF1_HEADER);
+	Font->Read(Font, &Size, FontHeader);
+
+	if (FontHeader->Magic[0] != PSF1_MAGIC0 || FontHeader->Magic[1] != PSF1_MAGIC1)
+		return NULL;
+	
+	UINTN GlyphBufferSize;
+	if (FontHeader->Mode == 1) {
+		// 512 glyph mode
+		GlyphBufferSize = FontHeader->CharSize * 512;
+	} else {
+		// 256 glyph mode
+		GlyphBufferSize = FontHeader->CharSize * 256;
+	}
+
+	void *GlyphBuffer;
+	{
+		Font->SetPosition(Font, sizeof(PSF1_HEADER));
+		SystemTable->BootServices->AllocatePool(EfiLoaderData, GlyphBufferSize, (void**)&GlyphBuffer);
+		Font->Read(Font, &GlyphBufferSize, GlyphBuffer);
+	}
+
+	PSF1_FONT *FinalFont;
+	SystemTable->BootServices->AllocatePool(EfiLoaderData, sizeof(PSF1_FONT), (void**)&FinalFont);
+	FinalFont->Header = FontHeader;
+	FinalFont->GlyphBuffer = GlyphBuffer;
+
+	return FinalFont;
 }
 
 int MemCmp(const void *a_ptr, const void *b_ptr, size_t n)
@@ -124,13 +162,20 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable)
 		SystemTable->BootServices->GetMemoryMap(&MapSize, Map, &MapKey, &DescriptorSize, &DescriptorVersion);
 	}
 
+	PSF1_FONT *Font = LoadPSF1Font(NULL, L"zap-light16.psf", ImageHandle, SystemTable);
+
 	boot_info_t BootInfo;
 	BootInfo.framebuffer = Fbuf;
+	BootInfo.font = Font;
 	BootInfo.mmap = Map;
 	BootInfo.mmap_size = MapSize;
 	BootInfo.mmap_desc_size = DescriptorSize;
 
 	SystemTable->BootServices->ExitBootServices(ImageHandle, MapKey);
+
+	if (Font == NULL) {
+		Print(L"Font is not available or has invalid header.\r\n");
+	}
 
 	void (*kmain)(boot_info_t *) = ((__attribute__((sysv_abi)) void(*)(boot_info_t *))Header.e_entry);
 	kmain(&BootInfo);

@@ -3,9 +3,11 @@
 
 #include <boot/efi_mem.h>
 #include <dd/fb/fb.h>
+#include <font.h>
 
 typedef struct {
 	framebuffer_t *framebuffer;
+	PSF1_FONT *font;
 	struct EFI_MEMORY_DESCRIPTOR *mmap;
 	uint64_t mmap_size;
 	uint64_t mmap_desc_size;
