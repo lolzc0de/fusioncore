@@ -1,5 +1,3 @@
-/build
-/lib
-/iso
-/fusioncore.iso
-/limine
+*.elf
+*.iso
+*.o

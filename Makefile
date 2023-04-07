@@ -1,95 +1,91 @@
-OSNAME = FusionCore
+TARGET		:= fckrnl/fckrnl
+ISO_IMAGE	:= fusioncore.iso
 
-GNUEFI = fcldr/uefi
-OVMF = /usr/share/OVMF/x64/OVMF.fd
-LDS = fckrnl/x86_64-kernel.ld
-CC = x86_64-elf-gcc
-LD = x86_64-elf-ld
+ARCH = @x86_64-elf
 
-CFLAGS = -std=gnu11 \
-    -ffreestanding \
-    -fno-stack-protector \
-    -fno-stack-check \
-    -fno-lto \
-    -fno-pie \
-    -fno-pic \
-    -m64 \
-    -march=x86-64 \
-    -mabi=sysv \
-    -mno-80387 \
-    -mno-mmx \
-    -mno-sse \
-    -mno-sse2 \
-    -mno-red-zone \
-    -mcmodel=kernel \
-	-Ifckrnl -Icore/inc
+CC	= $(ARCH)-gcc
+AS	= @nasm
+LD	= $(ARCH)-ld
 
-LDFLAGS = -nostdlib \
-    -static \
-    -m elf_x86_64 \
-    -z max-page-size=0x1000 \
-    -T $(LDS)
+CC_FLAGS	= -Wall -Wextra -pipe
+AS_FLAGS	= -felf64
+LD_FLAGS	=
 
-KERN_DIR := fckrnl
-CORE_DIR := core
-OBJDIR := lib
-BUILDDIR := build
-BOOTEFI := $(GNUEFI)/x86_64/fcldr/main.efi
-KERNEL = $(BUILDDIR)/fckrnl
+INTERNAL_LD_FLAGS :=		\
+	-Tfckrnl/linker.ld	\
+	-nostdlib		\
+	-static			\
+	-zmax-page-size=0x1000	\
+	--no-dynamic-linker	\
+	-ztext					
 
-rwildcard=$(foreach d,$(wildcard $(1:=/*)),$(call rwildcard,$d,$2) $(filter $(subst *,%,$2),$d))
+INTERNAL_CC_FLAGS :=		\
+ 	-Ifckrnl		\
+	-std=gnu11		\
+	-ffreestanding		\
+	-fno-stack-protector	\
+	-fno-pic -fpie		\
+	-mno-80387		\
+	-mno-mmx		\
+	-mno-3dnow		\
+	-mno-sse		\
+	-mno-sse2		\
+	-mno-red-zone
 
-KERN_SRC = $(call rwildcard,$(KERN_DIR),*.c)
-CORE_SRC = $(call rwildcard,$(CORE_DIR),*.c)
+C_FILES		:= $(shell find fckrnl/ -type f -name '*.c')
+AS_FILES	:= $(shell find fckrnl/ -type f -name '*.s')
 
-KERN_OBJ = $(patsubst $(KERN_DIR)/%.c, $(OBJDIR)/%.o, $(KERN_SRC))
-CORE_OBJ = $(patsubst $(CORE_DIR)/%.c, $(OBJDIR)/%.o, $(CORE_SRC))
+C_OBJ	= $(C_FILES:.c=.o)
+AS_OBJ	= $(AS_FILES:.s=.o)
+OBJ	= $(C_OBJ) $(AS_OBJ)
 
-OBJS = $(KERN_OBJ) $(CORE_OBJ)
-DIRS = $(wildcard $(KERN_DIR)/*) $(wildcard $(CORE_DIR)/*)
+.PHONY: all all_dbg clean format run run_dbg
 
-.PHONY: all
-all: limine kernel iso
+all: CC_FLAGS += -O3
+all: $(TARGET)
 
-.PHONY: limine
+all_dbg: CC_FLAGS += -O0
+all_dbg: CC_FLAGS += -ggdb
+all_dbg: $(TARGET)
+
+run: $(ISO_IMAGE)
+	qemu-system-x86_64 -M q35 -m 2G -serial stdio -cdrom $(ISO_IMAGE)
+
+run_dbg: $(ISO_IMAGE)
+	qemu-system-x86_64 -M q35 -m 2G -serial stdio -cdrom $(ISO_IMAGE) -s -S
+
 limine:
-	git clone https://github.com/limine-bootloader/limine --branch=v4.x-branch-binary limine/
-	make -C limine/
+	make -C third_party/limine
 
-.PHONY: kernel
-kernel: $(KERNEL)
+$(TARGET): $(OBJ)
+	$(LD) $(OBJ) $(LD_FLAGS) $(INTERNAL_LD_FLAGS) -o $@
 
-$(KERNEL): $(OBJS)
-	$(LD) $(LDFLAGS) -o $@ $^
 
-$(OBJDIR)/%.o: $(KERN_DIR)/%.c
-	@mkdir -p $(@D)
-	$(CC) $(CFLAGS) -c $^ -o $@
+$(ISO_IMAGE): limine $(TARGET)
+	rm -rf iso_root
+	mkdir -p iso_root
+	cp $(TARGET) 								\
+		limine.cfg third_party/limine/limine.sys			\
+		third_party/limine/limine-cd.bin 				\
+		third_party/limine/limine-eltorito-efi.bin iso_root/
+	xorriso -as mkisofs -b limine-cd.bin					\
+		-no-emul-boot -boot-load-size 4 -boot-info-table		\
+		--efi-boot limine-eltorito-efi.bin				\
+		-efi-boot-part --efi-boot-image --protective-msdos-label	\
+		iso_root -o $(ISO_IMAGE)
+	third_party/limine/limine-install $(ISO_IMAGE)
+	rm -rf iso_root
 
-$(OBJDIR)/%.o: $(CORE_DIR)/%.c
-	@mkdir -p $(@D)
-	$(CC) $(CFLAGS) -c $^ -o $@
+%.o: %.c
+	@printf " [CC]\t$<\n";
+	$(CC) $(CC_FLAGS) $(INTERNAL_CC_FLAGS) -c $< -o $@
 
-.PHONY: iso
-iso:
-	mkdir iso
-	cp $(KERNEL) limine.cfg limine/limine.sys limine/limine-cd.bin limine/limine-cd-efi.bin iso/
-	xorriso -as mkisofs -b limine-cd.bin \
-        -no-emul-boot -boot-load-size 4 -boot-info-table \
-        --efi-boot limine-cd-efi.bin \
-        -efi-boot-part --efi-boot-image --protective-msdos-label \
-        iso -o fusioncore.iso
-	limine/limine-deploy fusioncore.iso
-	rm -rf iso/
+%.o: %.s
+	@printf " [AS]\t$<\n";
+	$(AS) $(AS_FLAGS) $< -o $@
 
-.PHONY: run
-run:
-	qemu-system-x86_64 -cdrom fusioncore.iso -m 256M -cpu qemu64 -bios $(OVMF) -net none
-
-.PHONY: clean
 clean:
-	rm -rf lib iso build fusioncore.iso
+	rm -rf $(TARGET) $(OBJ) $(ISO_IMAGE)
 
-.PHONY: distclean
-distclean: clean
-	rm -rf limine/
+format:
+	astyle --mode=c -nA1fpxgHxbxjxpS $(C_FILES)
