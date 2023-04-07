@@ -19,6 +19,7 @@ typedef struct __attribute__((__packed__)) {
     uint32_t reserved2;
     uint32_t reserved3;
     uint16_t reserved4;
+	uint16_t iopb_offset;
 } tss_t;
 
 typedef struct __attribute__((__packed__)) {
@@ -30,7 +31,7 @@ typedef struct __attribute__((__packed__)) {
 	uint8_t base_hi;
 	uint32_t base_upper;
 	uint32_t reserved;
-} tss_entry_t;
+} tss_desc_t;
 
 typedef struct __attribute__((__packed__)) {
 	uint16_t limit_lo;
@@ -39,17 +40,17 @@ typedef struct __attribute__((__packed__)) {
 	uint8_t access;
 	uint8_t flags;
 	uint8_t base_hi;
-} gdt_entry_t;
+} gdt_desc_t;
 
 typedef struct __attribute__((__packed__)) {
-	gdt_entry_t entries[GDT_ENTRY_COUNT];
-	tss_entry_t gdt_tss;
+	gdt_desc_t entries[GDT_ENTRY_COUNT];
+	tss_desc_t tss_descriptor;
 } gdt_t;
 
 typedef struct __attribute__((__packed__)) {
 	uint16_t limit;
 	uint64_t base;
-} gdt_desc_t;
+} gdt_ptr_t;
 
 void gdt_init();
 

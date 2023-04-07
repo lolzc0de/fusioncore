@@ -4,9 +4,9 @@ extern uint8_t stack[16384];
 
 static tss_t tss;
 static gdt_t gdt;
-static gdt_desc_t gdt_descriptor;
+static gdt_ptr_t gdt_ptr;
 
-extern void _load_gdt_tss(uint64_t gdt_desc_ptr);
+extern void _load_gdt_tss(uint64_t gdt_ptr);
 
 void gdt_init(void)
 {
@@ -51,14 +51,14 @@ void gdt_init(void)
 	gdt.entries[GDT_USER_CODE].base_hi = 0;
 
 	// segment 0x28 - tss entry
-	gdt.gdt_tss.length = 104;
-	gdt.gdt_tss.base_lo = 0;
-	gdt.gdt_tss.base_mid = 0;
-	gdt.gdt_tss.flags1 = 0b10001001;
-	gdt.gdt_tss.flags2 = 0;
-	gdt.gdt_tss.base_hi = 0;
-	gdt.gdt_tss.base_upper = 0;
-	gdt.gdt_tss.reserved = 0;
+	gdt.tss_descriptor.length = 104;
+	gdt.tss_descriptor.base_lo = 0;
+	gdt.tss_descriptor.base_mid = 0;
+	gdt.tss_descriptor.flags1 = 0b10001001;
+	gdt.tss_descriptor.flags2 = 0;
+	gdt.tss_descriptor.base_hi = 0;
+	gdt.tss_descriptor.base_upper = 0;
+	gdt.tss_descriptor.reserved = 0;
 
 	// TODO: use memset
 	tss.reserved0 = 0;
@@ -81,8 +81,8 @@ void gdt_init(void)
 	tss.rsp[0] = (uintptr_t)stack + sizeof(stack);
 	tss.iopb_offset = sizeof(tss);
 
-	gdt_descriptor.limit = sizeof(gdt) - 1;
-	gdt_descriptor.base = (uint64_t)&gdt;
+	gdt_ptr.limit = sizeof(gdt) - 1;
+	gdt_ptr.base = (uint64_t)&gdt;
 
-	_load_gdt_tss((uintptr_t)&gdt_descriptor);
+	_load_gdt_tss((uintptr_t)&gdt_ptr);
 }
