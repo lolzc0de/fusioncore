@@ -15,4 +15,8 @@ void com_send_char(com_port_t port, char c);
 void com_send_string(com_port_t port, char *str);
 void com_recv(com_port_t port);
 
+///
+bool com_is_transmit_empty(com_port_t port);
+bool com_is_received(com_port_t port);
+
 #endif /* __COM_H_ */
