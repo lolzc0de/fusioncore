@@ -88,4 +88,4 @@ clean:
 	rm -rf $(TARGET) $(OBJ) $(ISO_IMAGE)
 
 format:
-	astyle --mode=c -nA1fpxgHxbxjxpS $(C_FILES)
+	find fckrnl -type f -iname "*.c" -o -iname "*.h" | xargs clang-format -i

@@ -6,8 +6,8 @@
 
 void kmain(struct stivale2_struct *stivale2_struct)
 {
-    gdt_init();
+	gdt_init();
 
-    for (;;)
-        asm volatile("hlt");
+	for (;;)
+		asm volatile("hlt");
 }

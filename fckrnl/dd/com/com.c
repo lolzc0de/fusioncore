@@ -14,7 +14,8 @@ void com_init(com_port_t port)
 
 void com_send_char(com_port_t port, char c)
 {
-	while (!com_is_transmit_empty(port));
+	while (!com_is_transmit_empty(port))
+		;
 
 	io_outb(port, c);
 }
@@ -28,7 +29,8 @@ void com_send_string(com_port_t port, char *str)
 
 void com_recv(com_port_t port)
 {
-	while (!com_is_received(port));
+	while (!com_is_received(port))
+		;
 
 	return io_inb(port);
 }
