@@ -13,12 +13,12 @@
 
 typedef struct __attribute__((__packed__)) {
 	uint32_t reserved0;
-    uint64_t rsp[3];
-    uint64_t reserved1;
-    uint64_t ist[7];
-    uint32_t reserved2;
-    uint32_t reserved3;
-    uint16_t reserved4;
+	uint64_t rsp[3];
+	uint64_t reserved1;
+	uint64_t ist[7];
+	uint32_t reserved2;
+	uint32_t reserved3;
+	uint16_t reserved4;
 	uint16_t iopb_offset;
 } tss_t;
 

@@ -19,6 +19,6 @@ void debug_set_col(char *col_code)
 {
 	if (col_code[0] != '\e' || col_code[1] != '[')
 		return;
-	
+
 	com_send_string(COM1, col_code);
 }
