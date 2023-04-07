@@ -12,6 +12,16 @@
 #define GDT_ENTRY_COUNT 5
 
 typedef struct __attribute__((__packed__)) {
+	uint32_t reserved0;
+    uint64_t rsp[3];
+    uint64_t reserved1;
+    uint64_t ist[7];
+    uint32_t reserved2;
+    uint32_t reserved3;
+    uint16_t reserved4;
+} tss_t;
+
+typedef struct __attribute__((__packed__)) {
 	uint16_t length;
 	uint16_t base_lo;
 	uint8_t base_mid;
@@ -42,7 +52,5 @@ typedef struct __attribute__((__packed__)) {
 } gdt_desc_t;
 
 void gdt_init();
-gdt_t *gdt_get(void);
-gdt_desc_t *gdt_get_descriptor(void);
 
 #endif /* __GDT_H_ */
