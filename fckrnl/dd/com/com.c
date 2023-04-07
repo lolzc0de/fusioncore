@@ -4,12 +4,12 @@
 void com_init(com_port_t port)
 {
 	io_outb(port + 1, 0x00);
-    io_outb(port + 3, 0x80);
-    io_outb(port + 0, 0x03);
-    io_outb(port + 1, 0x00);
-    io_outb(port + 3, 0x03);
-    io_outb(port + 2, 0xC7);
-    io_outb(port + 4, 0x0B);
+	io_outb(port + 3, 0x80);
+	io_outb(port + 0, 0x03);
+	io_outb(port + 1, 0x00);
+	io_outb(port + 3, 0x03);
+	io_outb(port + 2, 0xC7);
+	io_outb(port + 4, 0x0B);
 }
 
 void com_send_char(com_port_t port, char c)
