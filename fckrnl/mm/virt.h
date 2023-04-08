@@ -30,8 +30,12 @@ void vmm_map_range(uint64_t *page_tbl, uint64_t start, uint64_t end,
 void vmm_unmap_range(uint64_t *page_tbl, uint64_t start, uint64_t end);
 
 ///
-uint64_t *vmm_get_or_create_pml(uint64_t *pml, size_t pml_index,
-				uint64_t flags);
+
+uint64_t *vmm_get_root_page_tbl(void);
+
+	///
+	uint64_t *vmm_get_or_create_pml(uint64_t *pml, size_t pml_index,
+					uint64_t flags);
 void vmm_set_pt_value(uint64_t *page_tbl, uint64_t virt_page, uint64_t flags,
 		      uint64_t value);
 void vmm_flush_tlb(void *addr);

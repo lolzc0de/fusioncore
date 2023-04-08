@@ -3,20 +3,31 @@
 
 #include <stddef.h>
 
+#include <libk/data/linked_list.h>
+
 typedef void (*cache_ctor_t)(size_t);
 typedef void (*cache_dtor_t)(size_t);
 
 typedef struct {
+	slist_t next;
+	void *ptr;
 } slab_bufctl_t;
 
 typedef struct {
+	slist_t next;
+	slist_t prev;
+
 	slab_bufctl_t *freelist;
-} slab_object_t;
+} slab_t;
 
 typedef struct {
-} slab_state_t;
+	const char *name;
+	size_t slab_size;
 
-typedef struct {
+	cache_ctor_t constructor;
+	cache_dtor_t destructor;
+
+	slab_t *slabs;
 } slab_cache_t;
 
 #endif /* __MM_SLAB_H_ */

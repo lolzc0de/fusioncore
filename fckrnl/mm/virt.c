@@ -19,14 +19,15 @@ void vmm_init(struct stivale2_struct *stivale2_struct)
 	root_page_tbl = pmm_allocz(1);
 	assert(root_page_tbl != NULL);
 
-	vmm_map_range(root_page_tbl, 0, 4 * GB, 0, KERNEL_READ_WRITE);
-	vmm_map_range(root_page_tbl, 0, 4 * GB, HIGHER_HALF_DATA,
+	vmm_map_range(root_page_tbl, 0, 4 * GiB, 0, KERNEL_READ_WRITE);
+	vmm_map_range(root_page_tbl, 0, 4 * GiB, HIGHER_HALF_DATA,
 		      KERNEL_READ_WRITE);
-	vmm_map_range(root_page_tbl, 0, 2 * GB, HIGHER_HALF_CODE, KERNEL_READ);
+	vmm_map_range(root_page_tbl, 0, 2 * GiB, HIGHER_HALF_CODE, KERNEL_READ);
 
 	for (uint64_t i = 0; i < mmap->entries; i++) {
 		cur_entry = &mmap->memmap[i];
-		vmm_map_range(root_page_tbl, 0, cur_entry->length, HIGHER_HALF_DATA, KERNEL_READ_WRITE);
+		vmm_map_range(root_page_tbl, 0, cur_entry->length,
+			      HIGHER_HALF_DATA, KERNEL_READ_WRITE);
 	}
 
 	log(INFO, "Replaced bootloader page table at 0x%.16llx\n", read_cr(3));
@@ -105,6 +106,11 @@ void vmm_set_pt_value(uint64_t *page_tbl, uint64_t virt_page, uint64_t flags,
 
 	// for changes to apply, the translation lookaside buffers need to be flushed
 	vmm_flush_tlb((void *)virt_page);
+}
+
+uint64_t *vmm_get_root_page_tbl(void)
+{
+	return root_page_tbl;
 }
 
 void vmm_flush_tlb(void *address)
