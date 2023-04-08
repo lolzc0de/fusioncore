@@ -61,12 +61,12 @@ uint64_t isr_handler(uint64_t rsp)
 	cpu_state_t *cpu = (cpu_state_t *)rsp;
 
 	if (cpu->isr_num < 32) {
-		debug_set_color(TERM_RED);
+		debug_set_col(TERM_RED);
 		debug("\nEXCEPTION=EXCEPTION=EXCEPTION\n");
 		debug("    ISR%d: %s\n", cpu->isr_num,
 		      exceptions[cpu->isr_num]);
 		debug("    Error Code: 0x%.16llx\n\n\n", cpu->err_code);
-		debug_set_color(TERM_CYAN);
+		debug_set_col(TERM_CYAN);
 		debug("Register dump:\n\n");
 		debug("rax: 0x%.16llx, rbx:    0x%.16llx, rcx: 0x%.16llx, rdx: 0x%.16llx\n",
 		      cpu->rax, cpu->rbx, cpu->rcx, cpu->rdx);
@@ -79,17 +79,17 @@ uint64_t isr_handler(uint64_t rsp)
 		debug("rsp: 0x%.16llx, rflags: 0x%.16llx, cs:  0x%.16llx, rip: 0x%.16llx\n",
 		      cpu->rsp, cpu->rflags, cpu->cs, cpu->rip);
 
-		debug_set_color(TERM_COLOR_RESET);
+		debug_set_col(TERM_COLOR_RESET);
 		debug("\nHalting...");
 
 		for (;;)
 			asm volatile("cli; hlt");
-	} else if (cpu->irs_num >= 32 && cpu->isr_num < 48) {
-		debug_set_color(TERM_RED);
+	} else if (cpu->isr_num >= 32 && cpu->isr_num < 48) {
+		debug_set_col(TERM_RED);
 		debug("\nUNKNOWN HARDWARE INTERRUPT\n\n");
 		debug("    ISR%d: %s\n", cpu->isr_num,
 		      exceptions[cpu->isr_num]);
-		debug_set_color(TERM_CYAN);
+		debug_set_col(TERM_CYAN);
 		debug("Register dump:\n\n");
 		debug("rax: 0x%.16llx, rbx:    0x%.16llx, rcx: 0x%.16llx, rdx: 0x%.16llx\n",
 		      cpu->rax, cpu->rbx, cpu->rcx, cpu->rdx);
@@ -102,17 +102,17 @@ uint64_t isr_handler(uint64_t rsp)
 		debug("rsp: 0x%.16llx, rflags: 0x%.16llx, cs:  0x%.16llx, rip: 0x%.16llx\n",
 		      cpu->rsp, cpu->rflags, cpu->cs, cpu->rip);
 
-		debug_set_color(TERM_COLOR_RESET);
+		debug_set_col(TERM_COLOR_RESET);
 
 		pic_signal_eoi(cpu->isr_num);
 	} else if (cpu->isr_num == 128) {
 		// TODO: Implement syscalls
 
-		debug_set_color(TERM_RED);
+		debug_set_col(TERM_RED);
 		debug("\nUNKNOWN SYSCALL OCCURED\n\n");
 		debug("    ISR%d: %s\n", cpu->isr_num,
 		      exceptions[cpu->isr_num]);
-		debug_set_color(TERM_CYAN);
+		debug_set_col(TERM_CYAN);
 		debug("Register dump:\n\n");
 		debug("rax: 0x%.16llx, rbx:    0x%.16llx, rcx: 0x%.16llx, rdx: 0x%.16llx\n",
 		      cpu->rax, cpu->rbx, cpu->rcx, cpu->rdx);
@@ -125,13 +125,13 @@ uint64_t isr_handler(uint64_t rsp)
 		debug("rsp: 0x%.16llx, rflags: 0x%.16llx, cs:  0x%.16llx, rip: 0x%.16llx\n",
 		      cpu->rsp, cpu->rflags, cpu->cs, cpu->rip);
 
-		debug_set_color(TERM_COLOR_RESET);
+		debug_set_col(TERM_COLOR_RESET);
 	} else {
-		debug_set_color(TERM_RED);
+		debug_set_col(TERM_RED);
 		debug("\nUNKNOWN INTERRUPT OCCURRED\n\n");
 		debug("    ISR%d: %s\n", cpu->isr_num,
 		      exceptions[cpu->isr_num]);
-		debug_set_color(TERM_CYAN);
+		debug_set_col(TERM_CYAN);
 		debug("Register dump:\n\n");
 		debug("rax: 0x%.16llx, rbx:    0x%.16llx, rcx: 0x%.16llx, rdx: 0x%.16llx\n",
 		      cpu->rax, cpu->rbx, cpu->rcx, cpu->rdx);
@@ -144,7 +144,7 @@ uint64_t isr_handler(uint64_t rsp)
 		debug("rsp: 0x%.16llx, rflags: 0x%.16llx, cs:  0x%.16llx, rip: 0x%.16llx\n",
 		      cpu->rsp, cpu->rflags, cpu->cs, cpu->rip);
 
-		debug_set_color(TERM_COLOR_RESET);
+		debug_set_col(TERM_COLOR_RESET);
 		debug("\nHalting...");
 
 		for (;;)

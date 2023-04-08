@@ -1,4 +1,5 @@
 #include <cpu/idt.h>
+#include <dd/pic/pic.h>
 #include <asm/utils.h>
 
 extern void _load_idt(uint64_t idt_ptr);
