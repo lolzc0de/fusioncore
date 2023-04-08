@@ -3,21 +3,21 @@
 
 #include <stdint.h>
 
-#define write_cr(reg, value)								\
-	({														\
-		asm volatile("mov %0, %%cr" #reg : : "r" (value));	\
+#define write_cr(reg, val)								\
+	({													\
+		asm volatile("mov %0, %%cr" #reg :: "r"(val));	\
 	})
 
-#define read_cr(reg)											\
-	({															\
-		uint64_t value = 0;										\
-		asm volatile("mov %%cr" #reg ", %0" : "=r" (value));	\
-		value;													\
+#define read_cr(reg)                                                \
+	({                                                          \
+		uint64_t val = 0;                                 \
+		asm volatile("mov %%cr" #reg ", %0" : "=r"(val)); \
+		val;                                              \
 	})
 
-static inline void io_outb(uint16_t port, uint8_t value)
+static inline void io_outb(uint16_t port, uint8_t val)
 {
-	asm volatile("outb %0, %1" : : "a"(value), "Nd"(port));
+	asm volatile("outb %0, %1" : : "a"(val), "Nd"(port));
 }
 
 static inline uint8_t io_inb(uint16_t port)
@@ -34,7 +34,7 @@ static inline void io_wait(void)
 
 static inline void invlpg(uint64_t *address)
 {
-	asm volatile("invlpg (%0)" : : "r" (address));
+	asm volatile("invlpg (%0)" : : "r"(address));
 }
 
 #endif /* __UTILS_H_ */

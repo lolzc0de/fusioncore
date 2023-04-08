@@ -2,16 +2,19 @@
 #include <stdint.h>
 
 #include <boot/stivale2.h>
-#include <cpu/gdt.h>
-#include <cpu/idt.h>
 #include <libk/serial/debug.h>
 #include <libk/serial/log.h>
+#include <mm/phys.h>
+#include <mm/virt.h>
+#include <cpu/gdt.h>
+#include <cpu/idt.h>
 
 void kinit(struct stivale2_struct *stivale2_struct)
 {
 	gdt_init();
 	idt_init();
 	pmm_init(stivale2_struct);
+	vmm_init();
 }
 
 void kmain(struct stivale2_struct *stivale2_struct)
