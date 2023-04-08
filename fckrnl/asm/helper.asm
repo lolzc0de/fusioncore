@@ -1,4 +1,4 @@
-%macro pusha 0
+%macro pusha64 0
 	push rax
 	push rbx
 	push rcx
