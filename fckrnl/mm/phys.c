@@ -105,7 +105,7 @@ void *pmm_allocz(size_t page_count)
 	if (used_page_cnt <= 0)
 		return NULL;
 
-	void *ptr = pmm_ffp_range(page_count);
+	void *ptr = _get_ffp_range(page_count);
 	if (ptr == NULL)
 		return NULL;
 
