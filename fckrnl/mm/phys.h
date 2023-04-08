@@ -3,6 +3,7 @@
 
 void pmm_init(struct stivale2_struct *stivale2_struct);
 void *pmm_alloc(size_t page_cnt);
+void *pmm_allocz(size_t page_cnt);
 void pmm_free(void *ptr, size_t page_cnt);
 
 const char *_get_mmap_ent_str(uint32_t type);

@@ -104,9 +104,7 @@ uint64_t *vmm_get_or_create_pml(uint64_t *pml, size_t pml_index, uint64_t flags)
 {
 	// check present flag
 	if (!(pml[pml_index] & 1)) {
-		pml[pml_index] =
-			phys_to_hhd((uint64_t)pmm_alloc(1)) |
-			flags;
+		pml[pml_index] = phys_to_hhd((uint64_t)pmm_alloc(1)) | flags;
 	}
 
 	return (uint64_t *)(pml[pml_index] & ~(511));

@@ -3,13 +3,10 @@
 
 #include <stdint.h>
 
-#define write_cr(reg, val)								\
-	({													\
-		asm volatile("mov %0, %%cr" #reg :: "r"(val));	\
-	})
+#define write_cr(reg, val) ({ asm volatile("mov %0, %%cr" #reg ::"r"(val)); })
 
-#define read_cr(reg)                                                \
-	({                                                          \
+#define read_cr(reg)                                              \
+	({                                                        \
 		uint64_t val = 0;                                 \
 		asm volatile("mov %%cr" #reg ", %0" : "=r"(val)); \
 		val;                                              \

@@ -84,12 +84,34 @@ void *pmm_alloc(size_t page_count)
 	if (used_page_cnt <= 0)
 		return NULL;
 
-	void *pointer = _get_ffp_range(page_count);
+	void *ptr = _get_ffp_range(page_count);
 
-	if (pointer == NULL)
+	if (ptr == NULL)
 		return NULL;
 
-	uint64_t index = (uint64_t)pointer / PAGE_SIZE;
+	uint64_t index = PAGE_TO_BIT(ptr);
+
+	for (size_t i = 0; i < page_count; i++) {
+		bitmap_set(&pmm_bitmap, index + i);
+	}
+
+	used_page_cnt += page_count;
+
+	return (void *)BIT_TO_PAGE(index);
+}
+
+void *pmm_allocz(size_t page_count)
+{
+	if (used_page_cnt <= 0)
+		return NULL;
+
+	void *ptr = pmm_ffp_range(page_count);
+	if (ptr == NULL)
+		return NULL;
+
+	memset(ptr, 0, PAGE_SIZE * page_count);
+
+	uint64_t index = PAGE_TO_BIT(ptr);
 
 	for (size_t i = 0; i < page_count; i++)
 		bitmap_set(&pmm_bitmap, index + i);
@@ -99,9 +121,9 @@ void *pmm_alloc(size_t page_count)
 	return (void *)BIT_TO_PAGE(index);
 }
 
-void pmm_free(void *pointer, size_t page_count)
+void pmm_free(void *ptr, size_t page_count)
 {
-	uint64_t index = PAGE_TO_BIT(pointer);
+	uint64_t index = PAGE_TO_BIT(ptr);
 
 	for (size_t i = 0; i < page_count; i++)
 		bitmap_clear(&pmm_bitmap, index + i);
