@@ -2,6 +2,7 @@
 #include <boot/boot.h>
 #include <libk/serial/debug.h>
 #include <libk/serial/log.h>
+#include <libk/assert.h>
 #include <libk/string.h>
 #include <mm/mm.h>
 #include <mm/bmap.h>
@@ -54,7 +55,7 @@ void pmm_init(struct stivale2_struct *stivale2_struct)
 			continue;
 
 		if (cur_ent->length >= pmm_bitmap.size) {
-			pmm_bitmap.map = (uint8_t *)cur_ent->base;
+			pmm_bitmap.map = phys_to_hhd(cur_ent->base);
 
 			cur_ent->base += pmm_bitmap.size;
 			cur_ent->length -= pmm_bitmap.size;
@@ -78,56 +79,43 @@ void pmm_init(struct stivale2_struct *stivale2_struct)
 	log(INFO, "PMM initialized\n");
 }
 
-void *pmm_alloc(size_t page_count)
+void *pmm_alloc(size_t page_cnt)
 {
 	if (used_page_cnt <= 0)
 		return NULL;
 
-	void *ptr = _get_ffp_range(page_count);
+	void *ptr = _get_ffp_range(page_cnt);
 
 	if (ptr == NULL)
 		return NULL;
 
 	uint64_t index = PAGE_TO_BIT(ptr);
 
-	for (size_t i = 0; i < page_count; i++) {
+	for (size_t i = 0; i < page_cnt; i++) {
 		bitmap_set(&pmm_bitmap, index + i);
 	}
 
-	used_page_cnt += page_count;
+	used_page_cnt += page_cnt;
 
-	return (void *)BIT_TO_PAGE(index);
+	return (void *)phys_to_hhd(BIT_TO_PAGE(index));
 }
 
-void *pmm_allocz(size_t page_count)
+void *pmm_allocz(size_t page_cnt)
 {
-	if (used_page_cnt <= 0)
-		return NULL;
+	void *ptr = pmm_alloc(page_cnt);
+	memset(ptr, 0, PAGE_SIZE * page_cnt);
 
-	void *ptr = _get_ffp_range(page_count);
-	if (ptr == NULL)
-		return NULL;
-
-	memset(ptr, 0, PAGE_SIZE * page_count);
-
-	uint64_t index = PAGE_TO_BIT(ptr);
-
-	for (size_t i = 0; i < page_count; i++)
-		bitmap_set(&pmm_bitmap, index + i);
-
-	used_page_cnt += page_count;
-
-	return (void *)BIT_TO_PAGE(index);
+	return ptr;
 }
 
-void pmm_free(void *ptr, size_t page_count)
+void pmm_free(void *ptr, size_t page_cnt)
 {
-	uint64_t index = PAGE_TO_BIT(ptr);
+	uint64_t index = hhd_to_phys(PAGE_TO_BIT(ptr));
 
-	for (size_t i = 0; i < page_count; i++)
+	for (size_t i = 0; i < page_cnt; i++)
 		bitmap_clear(&pmm_bitmap, index + i);
 
-	used_page_cnt -= page_count;
+	used_page_cnt -= page_cnt;
 }
 
 const char *_get_mmap_ent_str(uint32_t type)
@@ -154,17 +142,17 @@ const char *_get_mmap_ent_str(uint32_t type)
 	}
 }
 
-void *_get_ffp_range(size_t page_count)
+void *_get_ffp_range(size_t page_cnt)
 {
 	for (size_t all_bits_i = 0; all_bits_i < PAGE_TO_BIT(hi_page_top);
 	     all_bits_i++) {
-		for (size_t page_count_i = 0; page_count_i < page_count;
-		     page_count_i++) {
+		for (size_t page_cnt_i = 0; page_cnt_i < page_cnt;
+		     page_cnt_i++) {
 			if (bitmap_get(&pmm_bitmap,
-				       all_bits_i + PAGE_TO_BIT(page_count_i)))
+				       all_bits_i + PAGE_TO_BIT(page_cnt_i)))
 				break;
 
-			if (page_count_i == page_count - 1)
+			if (page_cnt_i == page_cnt - 1)
 				return (void *)BIT_TO_PAGE(all_bits_i);
 		}
 	}
