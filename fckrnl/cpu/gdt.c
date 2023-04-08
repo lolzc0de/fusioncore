@@ -1,4 +1,5 @@
 #include <cpu/gdt.h>
+#include <libk/string.h>
 
 extern uint8_t stack[16384];
 
@@ -60,23 +61,7 @@ void gdt_init(void)
 	gdt.tss_descriptor.base_upper = 0;
 	gdt.tss_descriptor.reserved = 0;
 
-	// TODO: use memset
-	tss.reserved0 = 0;
-	tss.rsp[0] = 0;
-	tss.rsp[1] = 0;
-	tss.rsp[2] = 0;
-	tss.reserved1 = 0;
-	tss.ist[0] = 0;
-	tss.ist[1] = 0;
-	tss.ist[2] = 0;
-	tss.ist[3] = 0;
-	tss.ist[4] = 0;
-	tss.ist[5] = 0;
-	tss.ist[6] = 0;
-	tss.reserved2 = 0;
-	tss.reserved3 = 0;
-	tss.reserved4 = 0;
-	tss.iopb_offset = 0;
+	memset(&tss, 0, sizeof(tss));
 
 	tss.rsp[0] = (uintptr_t)stack + sizeof(stack);
 	tss.iopb_offset = sizeof(tss);
