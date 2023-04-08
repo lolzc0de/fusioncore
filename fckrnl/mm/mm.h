@@ -2,6 +2,7 @@
 #define __MM_MM_H_
 
 #include <stdbool.h>
+#include <asm/utils.h>
 
 #define HIGHER_HALF_DATA_LV5 0xFF00000000000000UL
 #define HIGHER_HALF_DATA_LV4 0xFFFF800000000000UL
@@ -22,8 +23,7 @@
 
 static inline bool is_la57_enabled(void)
 {
-	uint64_t cr4;
-	asm volatile("mov %%cr4, %0" : "=rax"(cr4));
+	uint64_t cr4 = read_cr(4);
 	return (cr4 >> 12) & 1;
 }
 
