@@ -2,20 +2,30 @@
 #include <asm/utils.h>
 
 extern void _load_idt(uint64_t idt_ptr);
-extern uintptr_t _isr_names[];
+extern uintptr_t _isr_vector[];
 
 static idt_desc_t idt[256];
 static idt_ptr_t idt_ptr;
 
 void idt_init(void)
 {
-	for (uint8_t i = 0; i < 32; i++) {
+	uint16_t i = 0;
+
+	// Exceptions
+	for (; i < 32; i++) {
 		idt_create_descriptor(i, INT_GATE);
 	}
 
-	//pic_remap();
+	// initialize PIC before setting up PIC lines
+	pic_remap();
 
-	for (uint8_t i = 32; i < 48; i++) {
+	// standard ISA IRQs
+	for (; i < 48; i++) {
+		idt_create_descriptor(i, INT_GATE);
+	}
+
+	// remaining IRQs
+	for (; i < 256; i++) {
 		idt_create_descriptor(i, INT_GATE);
 	}
 
@@ -29,7 +39,7 @@ void idt_init(void)
 
 void idt_create_descriptor(uint8_t index, uint8_t type_attribs)
 {
-	uint64_t offset = _isr_names[index];
+	uint64_t offset = _isr_vector[index]; // ISR handler address
 
 	idt[index].offset_lo = offset & 0xFFFF;
 	idt[index].selector = 0x08;

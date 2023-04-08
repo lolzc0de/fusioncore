@@ -59,18 +59,18 @@ void pic_set_mask(uint8_t irq_line)
 
 void pic_clear_mask(uint8_t irq_line)
 {
-    uint16_t port;
-    uint8_t value;
+	uint16_t port;
+	uint8_t value;
 
-    if (irq_line < 8) {
-        port = PIC1_DATA;
+	if (irq_line < 8) {
+		port = PIC1_DATA;
 	} else {
-        port = PIC2_DATA;
-        irq_line -= 8;
-    }
+		port = PIC2_DATA;
+		irq_line -= 8;
+	}
 
-    value = io_inb(port) & ~(1 << irq_line);
-    io_outb(port, value);
+	value = io_inb(port) & ~(1 << irq_line);
+	io_outb(port, value);
 }
 
 void pic_signal_eoi(uint64_t isr_number)
@@ -78,7 +78,7 @@ void pic_signal_eoi(uint64_t isr_number)
 	// check if IRQ comes from slave PIC
 	if (isr_number >= 40)
 		io_outb(PIC2_COMMAND, 0x20);
-	
+
 	// IRQ comes from master (and from slave) PIC
 	io_outb(PIC1_COMMAND, 0x20);
 }
