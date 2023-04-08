@@ -54,8 +54,7 @@ void pmm_init(struct stivale2_struct *stivale2_struct)
 			continue;
 
 		if (cur_ent->length >= pmm_bitmap.size) {
-			pmm_bitmap.map =
-				(uint8_t *)(phys_to_hhd(cur_ent->base));
+			pmm_bitmap.map = (uint8_t *)cur_ent->base;
 
 			cur_ent->base += pmm_bitmap.size;
 			cur_ent->length -= pmm_bitmap.size;
