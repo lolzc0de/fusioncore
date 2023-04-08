@@ -27,7 +27,7 @@ void com_send_string(com_port_t port, char *str)
 	}
 }
 
-void com_recv(com_port_t port)
+char com_recv(com_port_t port)
 {
 	while (!com_is_received(port))
 		;
