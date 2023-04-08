@@ -98,7 +98,7 @@ void *pmm_alloc(size_t page_cnt)
 
 	used_page_cnt += page_cnt;
 
-	return (void *)PHYS_TO_HIGHER_HALF_DATA(BIT_TO_PAGE(index));
+	return (void *)BIT_TO_PAGE(index);
 }
 
 void *pmm_allocz(size_t page_cnt)
@@ -111,7 +111,7 @@ void *pmm_allocz(size_t page_cnt)
 
 void pmm_free(void *ptr, size_t page_cnt)
 {
-	uint64_t index = HIGHER_HALF_DATA_TO_PHYS(PAGE_TO_BIT(ptr));
+	uint64_t index = PAGE_TO_BIT(ptr);
 
 	for (size_t i = 0; i < page_cnt; i++)
 		bitmap_clear(&pmm_bitmap, index + i);
