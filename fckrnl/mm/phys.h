@@ -1,6 +1,9 @@
 #ifndef __MM_PHYS_H_
 #define __MM_PHYS_H_
 
+#include <stddef.h>
+#include <stdint.h>
+
 void pmm_init(struct stivale2_struct *stivale2_struct);
 void *pmm_alloc(size_t page_cnt);
 void *pmm_allocz(size_t page_cnt);

@@ -19,18 +19,19 @@ void vmm_init(struct stivale2_struct *stivale2_struct)
 	root_page_tbl = pmm_allocz(1);
 	assert(root_page_tbl != NULL);
 
-	vmm_map_range(root_page_tbl, 0, 4 * GB, HIGHER_HALF_DATA_LV4,
+	vmm_map_range(root_page_tbl, 0, 4 * GB, 0, KERNEL_READ_WRITE);
+	vmm_map_range(root_page_tbl, 0, 4 * GB, HIGHER_HALF_DATA,
 		      KERNEL_READ_WRITE);
+	vmm_map_range(root_page_tbl, 0, 2 * GB, HIGHER_HALF_CODE, KERNEL_READ);
 
-	vmm_map_range(root_page_tbl, 0, 2 * GB, HIGHER_HALF_CODE,
-		      KERNEL_READ_WRITE);
 	for (uint64_t i = 0; i < mmap->entries; i++) {
 		cur_entry = &mmap->memmap[i];
-		vmm_map_range(root_page_tbl, 0, cur_entry->length,
-			      HIGHER_HALF_DATA_LV4, KERNEL_READ_WRITE);
+		vmm_map_range(root_page_tbl, 0, cur_entry->length, HIGHER_HALF_DATA, KERNEL_READ_WRITE);
 	}
 
+	log(INFO, "Replaced bootloader page table at 0x%.16llx\n", read_cr(3));
 	vmm_load_page_tbl(root_page_tbl);
+	log(INFO, "Now using kernel page table at 0x%.16llx\n", read_cr(3));
 
 	log(INFO, "VMM initialized\n");
 }
@@ -70,7 +71,9 @@ uint64_t *vmm_get_or_create_pml(uint64_t *pml, size_t pml_index, uint64_t flags)
 {
 	// check present flag
 	if (!(pml[pml_index] & 1)) {
-		pml[pml_index] = (uint64_t)pmm_allocz(1) | flags;
+		pml[pml_index] =
+			HIGHER_HALF_DATA_TO_PHYS((uint64_t)pmm_allocz(1)) |
+			flags;
 	}
 
 	return (uint64_t *)(pml[pml_index] & ~(511));
@@ -111,5 +114,5 @@ void vmm_flush_tlb(void *address)
 
 void vmm_load_page_tbl(uint64_t *page_tbl)
 {
-	write_cr(3, (uint64_t)page_tbl);
+	write_cr(3, HIGHER_HALF_DATA_TO_PHYS((uint64_t)page_tbl));
 }

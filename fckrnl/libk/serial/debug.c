@@ -1,6 +1,7 @@
 #include <dd/com/com.h>
-#include <libk/serial/debug.h>
 #include <libk/kprintf/kprintf.h>
+#include <libk/serial/debug.h>
+#include <libk/assert.h>
 
 const char dbg_buf[5120];
 
@@ -17,8 +18,7 @@ void debug(char *fmt, ...)
 
 void debug_set_col(char *col_code)
 {
-	if (col_code[0] != '\e' || col_code[1] != '[')
-		return;
+	assert(col_code[0] == '\e' && col_code[1] == '[');
 
 	com_send_string(COM1, col_code);
 }

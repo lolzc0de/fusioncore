@@ -55,7 +55,8 @@ void pmm_init(struct stivale2_struct *stivale2_struct)
 			continue;
 
 		if (cur_ent->length >= pmm_bitmap.size) {
-			pmm_bitmap.map = phys_to_hhd(cur_ent->base);
+			pmm_bitmap.map = (uint8_t *)PHYS_TO_HIGHER_HALF_DATA(
+				cur_ent->base);
 
 			cur_ent->base += pmm_bitmap.size;
 			cur_ent->length -= pmm_bitmap.size;
@@ -97,7 +98,7 @@ void *pmm_alloc(size_t page_cnt)
 
 	used_page_cnt += page_cnt;
 
-	return (void *)phys_to_hhd(BIT_TO_PAGE(index));
+	return (void *)PHYS_TO_HIGHER_HALF_DATA(BIT_TO_PAGE(index));
 }
 
 void *pmm_allocz(size_t page_cnt)
@@ -110,7 +111,7 @@ void *pmm_allocz(size_t page_cnt)
 
 void pmm_free(void *ptr, size_t page_cnt)
 {
-	uint64_t index = hhd_to_phys(PAGE_TO_BIT(ptr));
+	uint64_t index = HIGHER_HALF_DATA_TO_PHYS(PAGE_TO_BIT(ptr));
 
 	for (size_t i = 0; i < page_cnt; i++)
 		bitmap_clear(&pmm_bitmap, index + i);
