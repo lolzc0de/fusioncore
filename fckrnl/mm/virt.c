@@ -22,7 +22,8 @@ void vmm_init(struct stivale2_struct *stivale2_struct)
 	vmm_map_range(root_page_tbl, 0, 4 * GiB, 0, KERNEL_READ_WRITE);
 	vmm_map_range(root_page_tbl, 0, 4 * GiB, HIGHER_HALF_DATA,
 		      KERNEL_READ_WRITE);
-	vmm_map_range(root_page_tbl, 0, HEAP_MAX_SIZE, HEAP_START_ADDR, KERNEL_READ_WRITE);
+	vmm_map_range(root_page_tbl, 0, HEAP_MAX_SIZE, HEAP_START_ADDR,
+		      KERNEL_READ_WRITE);
 	vmm_map_range(root_page_tbl, 0, 2 * GiB, HIGHER_HALF_CODE, KERNEL_READ);
 
 	for (uint64_t i = 0; i < mmap->entries; i++) {
@@ -55,16 +56,16 @@ void vmm_unmap_page(uint64_t *page_tbl, uint64_t virt_page)
 void vmm_map_range(uint64_t *page_tbl, uint64_t start, uint64_t end,
 		   uint64_t offset, uint64_t flags)
 {
-	for (uint64_t i = ALIGN_DOWN(start, PAGE_SIZE); i < ALIGN_UP(end, PAGE_SIZE);
-	     i += PAGE_SIZE) {
+	for (uint64_t i = ALIGN_DOWN(start, PAGE_SIZE);
+	     i < ALIGN_UP(end, PAGE_SIZE); i += PAGE_SIZE) {
 		vmm_map_page(page_tbl, i, i + offset, flags);
 	}
 }
 
 void vmm_unmap_range(uint64_t *page_tbl, uint64_t start, uint64_t end)
 {
-	for (uint64_t i = ALIGN_DOWN(start, PAGE_SIZE); i < ALIGN_UP(end, PAGE_SIZE);
-	     i += PAGE_SIZE) {
+	for (uint64_t i = ALIGN_DOWN(start, PAGE_SIZE);
+	     i < ALIGN_UP(end, PAGE_SIZE); i += PAGE_SIZE) {
 		vmm_unmap_page(page_tbl, i);
 	}
 }
