@@ -14,7 +14,7 @@ slab_cache_t *slab_cache_create(const char *name, size_t slab_size,
 	assert(slab_size <= 512); // (PAGE_SIZE / 8)
 	assert(is_power_of_two(slab_size));
 
-	slab_cache_t *cache = (slab_cache_t *)pmm_alloc(1);
+	slab_cache_t *cache = (slab_cache_t *)pmm_allocz(1);
 
 	if (!cache && (flags & SLAB_PANIC)) {
 		log(PANIC,
@@ -246,7 +246,7 @@ done:
 
 slab_bufctl_t *slab_create_bufctl(void)
 {
-	slab_bufctl_t *bufctl = (slab_bufctl_t *)pmm_alloc(1);
+	slab_bufctl_t *bufctl = (slab_bufctl_t *)pmm_allocz(1);
 
 	if (!bufctl)
 		return NULL;

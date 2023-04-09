@@ -30,21 +30,17 @@ void *malloc(size_t size)
 
 		malloc_metadata_t *metadata = ptr;
 		metadata->size = index;
-
-		ptr += sizeof(malloc_metadata_t);
 	} else {
-		size_t new_size = ALIGN_UP(size + PAGE_SIZE, PAGE_SIZE);
+		size_t new_size = ALIGN_UP(size + sizeof(malloc_metadata_t), PAGE_SIZE);
 		size_t page_count = new_size / PAGE_SIZE;
 
 		ptr = pmm_allocz(page_count);
 
 		malloc_metadata_t *metadata = ptr;
 		metadata->size = page_count;
-
-		ptr += PAGE_SIZE;
 	}
 
-	return ptr + HEAP_START_ADDR;
+	return ptr + sizeof(malloc_metadata_t) + HEAP_START_ADDR;
 }
 
 void free(void *ptr)
@@ -52,15 +48,15 @@ void free(void *ptr)
 	if (!ptr)
 		return;
 	
-	ptr = ptr - HEAP_START_ADDR;
+	ptr = ptr - HEAP_START_ADDR - sizeof(malloc_metadata_t);
 	
 	if (((uint64_t)ptr & 0xFFF) != 0) {
-		malloc_metadata_t *metadata = ptr - sizeof(malloc_metadata_t);
+		malloc_metadata_t *metadata = ptr;
 		size_t index = metadata->size;
 
 		slab_cache_free(slab_caches[index], metadata, SLAB_PANIC);
 	} else {
-		malloc_metadata_t *metadata = ptr - PAGE_SIZE;
+		malloc_metadata_t *metadata = ptr;
 		size_t page_count = metadata->size;
 	
 		pmm_free(metadata, page_count);
