@@ -45,20 +45,23 @@ void slab_cache_destroy(slab_cache_t *cache, slab_flags_t flags)
 
 	if (!cache)
 		return;
-	
+
 	cache->slabs = cache->slabs_head;
 
 	for (;;) {
 		if (!cache->slabs)
 			break;
-		
-		if ((cache->slabs->bufctl_count != cache->bufctl_count_max) && (flags & SLAB_PANIC)) {
-			log(PANIC, "slab_cache_destroy('%s'): A slab wasn't completely free\n", cache->name);
+
+		if ((cache->slabs->bufctl_count != cache->bufctl_count_max) &&
+		    (flags & SLAB_PANIC)) {
+			log(PANIC,
+			    "slab_cache_destroy('%s'): A slab wasn't completely free\n",
+			    cache->name);
 		}
 
 		if (cache->slabs->bufctl_count != cache->bufctl_count_max)
 			return;
-		
+
 		pmm_free((void *)cache->slabs->freelist_head, 1);
 
 		cache->slabs = cache->slabs->next;
@@ -121,7 +124,9 @@ void slab_cache_free(slab_cache_t *cache, void *ptr, slab_flags_t flags)
 
 	for (;;) {
 		if (!cache->slabs && (flags & SLAB_PANIC)) {
-			log(PANIC, "slab_cache_free('%s'): Couldn't find a slab to be freed\n", cache->name);
+			log(PANIC,
+			    "slab_cache_free('%s'): Couldn't find a slab to be freed\n",
+			    cache->name);
 		}
 		if (!cache->slabs)
 			return;
@@ -150,15 +155,17 @@ void slab_cache_grow(slab_cache_t *cache, size_t count, slab_flags_t flags)
 	if (!cache)
 		return;
 
+	cache->slabs = cache->slabs_head;
+
 	for (size_t i = 0; i < count; i++) {
-		cache->slabs = cache->slabs_head;
 		slab_bufctl_t *bufctl = slab_create_bufctl();
 
 		if (!bufctl && (flags & SLAB_PANIC)) {
 			log(PANIC,
-			    "slab_cache_grow('%s'): Couldn't create bufctl\n",
+			    "Slab cache grow ('%s'): Couldn't create bufctl\n",
 			    cache->name);
 		}
+
 		if (!bufctl)
 			return;
 
@@ -181,24 +188,27 @@ void slab_cache_reap(slab_cache_t *cache, slab_flags_t flags)
 
 	cache->slabs = cache->slabs_head;
 
-	if (cache->slabs->bufctl_count == cache->bufctl_count_max) {
-		cache->slabs_head = cache->slabs->next;
+	slab_t *prev = cache->slabs_head;
 
-		pmm_free((void *)cache->slabs->freelist_head, 1);
-	} else {
-		for (;;) {
-			if (!cache->slabs || !cache->slabs->next)
-				return;
-
-			if (cache->slabs->next->bufctl_count ==
-			    cache->bufctl_count_max) {
-				slab_t *free_slab = cache->slabs->next;
-				cache->slabs->next = cache->slabs->next->next;
-
-				pmm_free((void *)free_slab, 1);
-			}
-			cache->slabs = cache->slabs->next;
+	for (;;) {
+		if (!cache->slabs) {
+			cache->slabs = cache->slabs_head;
+			return;
 		}
+
+		if (cache->slabs->bufctl_count == cache->bufctl_count_max) {
+			if (cache->slabs == cache->slabs_head) {
+				cache->slabs_head = cache->slabs->next;
+			}
+			prev->next = cache->slabs->next;
+			pmm_free((void *)cache->slabs, 1);
+			cache->slabs = prev->next;
+
+			continue;
+		}
+
+		prev = cache->slabs;
+		cache->slabs = cache->slabs->next;
 	}
 }
 
@@ -212,8 +222,6 @@ void slab_cache_dump(slab_cache_t *cache, slab_flags_t flags)
 		return;
 
 	debug("Dump for cache cache '%s'\n", cache->name);
-
-	cache->slabs = cache->slabs_head;
 
 	for (int slab_count = 0;; slab_count++) {
 		if (!cache->slabs)
