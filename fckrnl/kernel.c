@@ -29,25 +29,6 @@ void kmain(struct stivale2_struct *stivale2_struct)
 {
 	kinit(stivale2_struct);
 
-	slab_cache_t *dummy1 = slab_cache_create("test cache", 128);
-	slab_cache_dump(dummy1);
-
-	debug("\nAllocation tests:\n\n");
-
-	void *d1ptr1 = slab_cache_alloc(dummy1);
-	void *d1ptr2 = slab_cache_alloc(dummy1);
-	void *d1ptr3 = slab_cache_alloc(dummy1);
-
-	debug("d1ptr1: %p\n", d1ptr1);
-	debug("d1ptr2: %p\n", d1ptr2);
-	debug("d1ptr3: %p\n", d1ptr3);
-
-	slab_cache_free(dummy1, d1ptr1);
-	slab_cache_free(dummy1, d1ptr2);
-	slab_cache_free(dummy1, d1ptr3);
-
-	slab_cache_dump(dummy1);
-
 	for (;;)
 		asm volatile("hlt");
 }

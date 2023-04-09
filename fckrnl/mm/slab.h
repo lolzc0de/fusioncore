@@ -28,18 +28,22 @@ typedef struct {
 	slab_t *slabs;
 } slab_cache_t;
 
-slab_cache_t *slab_cache_create(const char *name, size_t slab_size);
-void slab_cache_destroy(void);
-void *slab_cache_alloc(slab_cache_t *cache);
-void slab_cache_free(slab_cache_t *cache, void *pointer);
-void slab_cache_dump(slab_cache_t *cache);
+typedef enum { SLAB_PANIC = 1, SLAB_AUTO_GROW = (1 << 1) } slab_flags_t;
+
+slab_cache_t *slab_cache_create(const char *name, size_t slab_size,
+				slab_flags_t flags);
+void slab_cache_destroy(slab_cache_t *cache, slab_flags_t flags);
+void *slab_cache_alloc(slab_cache_t *cache, slab_flags_t flags);
+void slab_cache_free(slab_cache_t *cache, void *ptr, slab_flags_t flags);
+void slab_cache_dump(slab_cache_t *cache, slab_flags_t flags);
 
 slab_bufctl_t *slab_create_bufctl(void);
 void slab_create_slab(slab_cache_t *cache, slab_bufctl_t *bufctl);
-void slab_init_bufctls(slab_cache_t *cache, slab_bufctl_t *bufctl, size_t index);
+void slab_init_bufctls(slab_cache_t *cache, slab_bufctl_t *bufctl,
+		       size_t index);
 
-bool slab_cache_grow(slab_cache_t *cache, size_t count);
-void slab_cache_reap(void);
+void slab_cache_grow(slab_cache_t *cache, size_t count, slab_flags_t flags);
+void slab_cache_reap(slab_cache_t *cache, slab_flags_t flags);
 
 ///
 bool is_power_of_two(int num);
