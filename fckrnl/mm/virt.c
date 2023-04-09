@@ -22,6 +22,7 @@ void vmm_init(struct stivale2_struct *stivale2_struct)
 	vmm_map_range(root_page_tbl, 0, 4 * GiB, 0, KERNEL_READ_WRITE);
 	vmm_map_range(root_page_tbl, 0, 4 * GiB, HIGHER_HALF_DATA,
 		      KERNEL_READ_WRITE);
+	vmm_map_range(root_page_tbl, 0, HEAP_MAX_SIZE, HEAP_START_ADDR, KERNEL_READ_WRITE);
 	vmm_map_range(root_page_tbl, 0, 2 * GiB, HIGHER_HALF_CODE, KERNEL_READ);
 
 	for (uint64_t i = 0; i < mmap->entries; i++) {
