@@ -1,5 +1,18 @@
-#include <stddef.h>
-#include <stdint.h>
+#include <boot/stivale2.h>
+#include <boot/boot.h>
+
+#include <acpi/acpi.h>
+
+#include <cpu/cpu.h>
+#include <cpu/gdt.h>
+#include <cpu/idt.h>
+
+#include <dd/apic/apic.h>
+
+#include <mm/mm.h>
+#include <mm/slab.h>
+#include <mm/phys.h>
+#include <mm/virt.h>
 
 #include <libk/serial/log.h>
 #include <libk/serial/debug.h>
@@ -7,17 +20,8 @@
 #include <libk/malloc.h>
 #include <libk/string.h>
 
-#include <boot/stivale2.h>
-#include <boot/boot.h>
-
-#include <cpu/cpu.h>
-#include <cpu/gdt.h>
-#include <cpu/idt.h>
-
-#include <mm/mm.h>
-#include <mm/slab.h>
-#include <mm/phys.h>
-#include <mm/virt.h>
+#include <stddef.h>
+#include <stdint.h>
 
 void kinit(struct stivale2_struct *stivale2_struct)
 {
@@ -32,7 +36,7 @@ void kinit(struct stivale2_struct *stivale2_struct)
 	log(INFO, "CPU Vendor: %s\n", cpu_get_vendor_str());
 
 	acpi_init(stivale2_struct);
-	// TODO: APIC
+	apic_init();
 
 	struct stivale2_struct_tag_smp *smp_tag =
 		stivale2_get_tag(stivale2_struct, STIVALE2_STRUCT_TAG_SMP_ID);
