@@ -3,8 +3,14 @@
 
 uint8_t stack[16384];
 
+static struct stivale2_header_tag_smp smp_hdr_tag = {
+	.tag = { .identifier = STIVALE2_HEADER_TAG_SMP_ID, .next = 0 },
+	.flags = 0
+};
+
 static struct stivale2_header_tag_framebuffer framebuffer_hdr_tag = {
-	.tag = { .identifier = STIVALE2_HEADER_TAG_FRAMEBUFFER_ID, .next = 0 },
+	.tag = { .identifier = STIVALE2_HEADER_TAG_FRAMEBUFFER_ID,
+		 .next = (uintptr_t)&smp_hdr_tag },
 	.framebuffer_width = 0,
 	.framebuffer_height = 0,
 	.framebuffer_bpp = 0

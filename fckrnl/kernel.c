@@ -27,6 +27,14 @@ void kinit(struct stivale2_struct *stivale2_struct)
 	idt_init();
 
 	malloc_heap_init();
+
+	// TODO: ACPI
+	// TODO: APIC
+
+	struct stivale2_struct_tag_smp *smp_tag =
+		stivale2_get_tag(stivale2_struct, STIVALE2_STRUCT_TAG_SMP_ID);
+
+	asm volatile("nop");
 }
 
 void kmain(struct stivale2_struct *stivale2_struct)

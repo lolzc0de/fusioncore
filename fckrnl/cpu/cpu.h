@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 #include <libk/malloc.h>
-#include <libk/printf/printf.h>
+#include <libk/kprintf/kprintf.h>
 
 typedef struct {
 	uint64_t r15;
