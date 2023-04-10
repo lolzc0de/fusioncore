@@ -32,7 +32,19 @@ void _acpi_rsdp_validate(uint64_t rsdp)
 
 	cs = cs & 0xFF;
 
-	if (cs != 0) {
-		log(PANIC, "RSDP Checksum invalid: 0x%x\n", cs);
+	if (cs == 0) {
+		log(INFO, "RSDP checksum is verified\n");
+	} else {
+		log(PANIC, "RSDP checksum isn't 0! Checksum: 0x%x\n", cs);
 	}
+}
+
+rsdp_t *_acpi_get_rsdp(void)
+{
+	return rsdp;
+}
+
+bool _acpi_has_xsdt(void)
+{
+	return has_xsdt;
 }
