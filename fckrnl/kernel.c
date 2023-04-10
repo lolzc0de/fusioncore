@@ -10,6 +10,7 @@
 #include <boot/stivale2.h>
 #include <boot/boot.h>
 
+#include <cpu/cpu.h>
 #include <cpu/gdt.h>
 #include <cpu/idt.h>
 
@@ -27,6 +28,8 @@ void kinit(struct stivale2_struct *stivale2_struct)
 	idt_init();
 
 	malloc_heap_init();
+
+	log(INFO, "CPU Vendor: %s\n", cpu_get_vendor_str());
 
 	acpi_init(stivale2_struct);
 	// TODO: APIC
