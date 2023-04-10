@@ -28,7 +28,7 @@ void kinit(struct stivale2_struct *stivale2_struct)
 
 	malloc_heap_init();
 
-	// TODO: ACPI
+	acpi_init(stivale2_struct);
 	// TODO: APIC
 
 	struct stivale2_struct_tag_smp *smp_tag =
