@@ -22,7 +22,7 @@
 #define IOAPIC_TRIGMODE_BIT (1 << 15)
 #define IOAPIC_MASK_BIT (1 << 16)
 
-#define IRQ_TO_IOREDTBL_REG(irq) (irq * 2 + 0x10)
+#define IRQ_TO_IOREDTBL_REG(irq) ((irq * 2) + 0x10)
 
 void apic_init(void);
 
@@ -35,7 +35,7 @@ uint8_t lapic_get_id(void);
 
 uint32_t ioapic_read_reg(size_t ioapic_i, uint8_t reg_offset);
 void ioapic_write_reg(size_t ioapic_i, uint8_t reg_offset, uint32_t data);
-void ioapic_set_irq_redir(uint32_t lapic_id, uint8_t vector, uint8_t irq,
+uint32_t ioapic_set_irq_redir(uint32_t lapic_id, uint8_t vector, uint8_t irq,
 			     bool mask);
 uint32_t ioapic_max_redir(size_t ioapic_i);
 size_t ioapic_i_from_gsi(uint32_t gsi);

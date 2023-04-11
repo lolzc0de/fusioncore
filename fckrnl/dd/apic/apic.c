@@ -4,10 +4,13 @@
 #include <cpu/isr.h>
 
 #include <mm/mm.h>
+#include <mm/bmap.h>
 
 #include <dd/apic/apic.h>
 #include <dd/pic/pic.h>
 
+#include <libk/malloc.h>
+#include <libk/string.h>
 #include <libk/serial/log.h>
 
 static uintptr_t lapic_addr;
@@ -25,6 +28,18 @@ void apic_init(void)
 
 	for (uint8_t i = 0; i < 16; i++) {
 		ioapic_set_irq_redir(lapic_get_id(), i + 32, i, true);
+	}
+
+	bitmap_t irq_bitmap;
+	irq_bitmap.size = 16;
+	irq_bitmap.map = (uint8_t *)malloc(irq_bitmap.size);
+	memset((void *)irq_bitmap.map, 0, irq_bitmap.size);
+
+	for (uint32_t i = 0; i < 16; i++) {
+		if (!bitmap_get(&irq_bitmap, i)) {
+			uint32_t irq = ioapic_set_irq_redir(lapic_get_id(), i + 32, i, true);
+			bitmap_set(&irq_bitmap, irq);
+		}
 	}
 
 	log(INFO, "APIC Initialized\n");
@@ -156,19 +171,21 @@ void ioapic_set_gsi_redir(uint32_t lapic_id, uint8_t vector, uint32_t gsi,
 			 (uint32_t)(redirect_entry >> 32));
 }
 
-void ioapic_set_irq_redir(uint32_t lapic_id, uint8_t vector, uint8_t irq,
+uint32_t ioapic_set_irq_redir(uint32_t lapic_id, uint8_t vector, uint8_t irq,
 			     bool mask)
 {
 	for (size_t isos_i = 0; isos_i < madt_isos_i; isos_i++) {
 		if (madt_isos[isos_i]->irq_src == irq) {
-			log(INFO, "Resolving ISO with IRQ %d\n", irq);
+			log(INFO, "Resolving ISO (GSI: %d) with IRQ %d\n", madt_isos[isos_i]->gsi, irq);
 			ioapic_set_gsi_redir(lapic_id, vector,
 						madt_isos[isos_i]->gsi,
 						madt_isos[isos_i]->flags, mask);
 
-			return;
+			return madt_isos[isos_i]->gsi;
 		}
 	}
 
 	ioapic_set_gsi_redir(lapic_id, vector, irq, 0, mask);
+
+	return irq;
 }
