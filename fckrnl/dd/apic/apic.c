@@ -21,7 +21,11 @@ void apic_init(void)
 	lapic_addr = PHYS_TO_HIGHER_HALF_DATA(madt->lapic_addr);
 
 	pic_disable();
-	lapic_enable();
+	lapic_enable(); 
+
+	for (uint8_t i = 0; i < 16; i++) {
+		ioapic_set_irq_redir(lapic_get_id(), i + 32, i, true);
+	}
 
 	log(INFO, "APIC Initialized\n");
 }
@@ -68,24 +72,31 @@ void lapic_write_reg(uint32_t reg, uint32_t data)
 void lapic_enable(void)
 {
 	lapic_write_reg(LAPIC_SPURIOUS_REG, lapic_read_reg(LAPIC_SPURIOUS_REG) |
-						    LAPIC_ENABLE |
+						    LAPIC_ENABLE_BIT |
 						    SPURIOUS_INT);
 }
 
-uint32_t ioapic_read_reg(size_t ioapic_i, uint8_t reg_offset)
+uint8_t lapic_get_id(void)
 {
-	uint32_t volatile *cur_ioapic_base =
-		(uint32_t volatile *)madt_ioapics[ioapic_i];
-	*cur_ioapic_base = reg_offset;
-	return *(cur_ioapic_base + 0x10);
+	return (uint8_t)(lapic_read_reg(LAPIC_ID_REG) >> 24);
 }
 
-void ioapic_write_reg(size_t ioapic_i, uint8_t reg_offset, uint32_t data)
+uint32_t ioapic_read_reg(size_t ioapic_i, uint8_t reg)
 {
-	uint32_t volatile *cur_ioapic_base =
-		(uint32_t volatile *)madt_ioapics[ioapic_i];
-	*cur_ioapic_base = reg_offset;
-	*(cur_ioapic_base + 0x10) = data;
+	size_t ioapic_i_addr = PHYS_TO_HIGHER_HALF_DATA(
+		madt_ioapics[ioapic_i]->ioapic_addr);
+
+	*((volatile uint32_t *)(ioapic_i_addr + IOREGSEL)) = reg;
+	return *((volatile uint32_t *)(ioapic_i_addr + IOWIN));
+}
+
+void ioapic_write_reg(size_t ioapic_i, uint8_t reg, uint32_t data)
+{
+	size_t ioapic_i_addr = PHYS_TO_HIGHER_HALF_DATA(
+		madt_ioapics[ioapic_i]->ioapic_addr);
+
+	*((volatile uint32_t *)(ioapic_i_addr + IOREGSEL)) = reg;
+	*((volatile uint32_t *)(ioapic_i_addr + IOWIN)) = data;
 }
 
 uint32_t ioapic_get_max_redir(size_t ioapic_i)
@@ -119,16 +130,18 @@ void ioapic_set_gsi_redir(uint32_t lapic_id, uint8_t vector, uint32_t gsi,
 
 	// if flags.pin_polarity is active low (else active high)
 	if (flags & 2) {
-		redirect_entry |= 1 << 13;
+		redirect_entry |= IOAPIC_PINPOL_BIT;
 	}
 
 	// if flags.trigger_mode is level triggered (else edge triggered)
 	if (flags & 8) {
-		redirect_entry |= 1 << 15;
+		redirect_entry |= IOAPIC_TRIGMODE_BIT;
 	}
 
-	if (!mask) {
-		redirect_entry |= 1 << 16;
+	if (mask) {
+		redirect_entry |= IOAPIC_MASK_BIT;
+	} else {
+		redirect_entry &= ~IOAPIC_MASK_BIT;
 	}
 
 	// set destination
@@ -141,4 +154,21 @@ void ioapic_set_gsi_redir(uint32_t lapic_id, uint8_t vector, uint32_t gsi,
 	ioapic_write_reg(ioapic_i, ioredtbl, (uint32_t)redirect_entry);
 	ioapic_write_reg(ioapic_i, ioredtbl + 1,
 			 (uint32_t)(redirect_entry >> 32));
+}
+
+void ioapic_set_irq_redir(uint32_t lapic_id, uint8_t vector, uint8_t irq,
+			     bool mask)
+{
+	for (size_t isos_i = 0; isos_i < madt_isos_i; isos_i++) {
+		if (madt_isos[isos_i]->irq_src == irq) {
+			log(INFO, "Resolving ISO with IRQ %d\n", irq);
+			ioapic_set_gsi_redir(lapic_id, vector,
+						madt_isos[isos_i]->gsi,
+						madt_isos[isos_i]->flags, mask);
+
+			return;
+		}
+	}
+
+	ioapic_set_gsi_redir(lapic_id, vector, irq, 0, mask);
 }

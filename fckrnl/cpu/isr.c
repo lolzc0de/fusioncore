@@ -77,7 +77,7 @@ uint64_t isr_handler(uint64_t rsp)
 			asm volatile("cli; hlt");
 	} else if (cpu->isr_num >= 32 && cpu->isr_num < 48) {
 		debug_set_col(TERM_RED);
-		debug("\nUNKNOWN HARDWARE INTERRUPT\n\n");
+		debug("\nUNHANDLED HARDWARE INTERRUPT\n\n");
 		debug("    ISR%d: %s\n", cpu->isr_num,
 		      exceptions[cpu->isr_num]);
 		debug_set_col(TERM_CYAN);
@@ -86,6 +86,7 @@ uint64_t isr_handler(uint64_t rsp)
 
 		debug_set_col(TERM_COLOR_RESET);
 
+		// TODO: Probably change this for lapic
 		pic_signal_eoi(cpu->isr_num);
 	} else if (cpu->isr_num == SYSCALL_INT) {
 		// TODO: Implement syscalls
